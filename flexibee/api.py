@@ -1,32 +1,157 @@
 import json
 import requests
 
+
+class Error(Exception):
+
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return self.value
+
+
 class WinstromRequest(object):
     """
     Base class for all flexibee requests
     """
+    json_id = 'winstrom'
+
+    def __init__(self, req_filter=None):
+        self.req_filter = req_filter
+
 
     def _to_json(self, payload):
 	"""
+        Helper method that converts the request into JSON
+
 	@param payload_dict - dictionary with the request payload
 	@return json formatted request
 	"""
 	init_payload = {"@version":"1.0" }
 	init_payload.update(payload)
-	json_dict = {"winstrom":
-			 init_payload
+	json_dict = { self.__class__.json_id:
+                          init_payload
 		     }
 	return json.dumps(json_dict)
 
 
-    def send(self, url, user, passwd):
+    def get(self, base_url, user, passwd, params={}):
 	"""
-	Sends the request to flexibee
+	Sends the GET request to flexibee.
+
+        @param base_url - base URL path for accessing flexibee
+        @param user - username for authentication
+        @param password - password for authentication
+        @param params - optional query parameters
+        @param attributes - optional list of attributes to be fetched
+        @return JSON response
 	"""
-	response = requests.put("%s/%s.json" % (url, self.__class__.url),
+	response = requests.get(self._build_url(base_url), params=params,
+				auth=(user, passwd), verify=False)
+	return response
+
+
+    def get_and_build_objects(self, cls, base_url, user, passwd, params={}, 
+                              attributes=[]):
+	"""
+	Sends the GET request to flexibee and builds requested objects
+	from the response.
+
+        @param base_url - base URL path for accessing flexibee
+        @param cls - class of the object that will be build from the
+        JSON response
+        @param user - username for authentication
+        @param password - password for authentication
+        @param params - optional query parameters
+        @param attributes - optional list of attributes to be
+        fetched. When empty, the object will be build from default
+        attributes
+        @return a list of objects of a specified class
+	"""
+        # by default no attributes of the object will be filtered
+        # (assume attributes array is empty)
+        real_params = {}
+        filter_attributes = lambda k: k
+
+        # generate a list of custom details that make flexibee extract
+        # only the requested attributes. However, flexibee also
+        # provides additional ones like display strings
+        # etc.. Therefore, we provide a custom lambda that performs
+        # the removal of attributes that were not requested
+        if len(attributes) != 0:
+            real_params = { 'detail': 'custom:%s' % ','.join(attributes) }
+            filter_attributes = lambda k: obj_attrs.pop(k)
+
+        real_params.update(params)
+        # fetch the objects
+	response = self.get(base_url, user, passwd, real_params)
+        response_payload = self._parse_response(response)
+        obj_list = []
+        # Iterate through all returned JSON objects and build the
+        # requested class objects from them. The attributes of the
+        # resulting objects will be filtered and only those specified
+        # in 'attributes' list will be retained
+        for obj_attrs in response_payload[self.__class__.url]:
+            # filter only requested attributes
+            set(obj_attrs.keys()) - set(attributes)
+
+            map(filter_attributes, set(obj_attrs.keys()) - set(attributes))
+            obj_list.append(cls(**obj_attrs))
+
+        return obj_list
+
+
+    def put(self, base_url, user, passwd, params={}):
+	"""
+	Sends the PUT request to flexibee. The request
+	is represented in JSON.
+        @param base_url - see put()
+        @param user - see put()
+        @param password - see put()
+        @param params - see put()
+        @return JSON response
+	"""
+	response = requests.put(self._build_url(base_url), params=params,
 				data=self._to_json(),
 				auth=(user, passwd), verify=False)
 	return response
+
+
+    def _parse_response(self, response):
+        """
+        Helper method that parses the payload into JSON and returns
+        the JSON message payload. If an error is detected, Exception
+        is generated.
+
+        @param self - this request instance
+        @return - a valid response in JSON format or an exception is
+        thrown
+        """
+        response_json = json.loads(response.content)
+        print response_json
+        response_top_level = response_json[self.__class__.json_id]
+        if response_top_level.has_key('success') and \
+                response_top_level['success'].lower() == 'false':
+            raise Error("flexibee error: '%s', version: '%s'" %
+                        (response_top_level['message'],
+                         response_top_level['@version']))
+        return response_top_level
+
+
+
+    def _build_url(self, base_url):
+        """
+        Builds full URL for the request
+
+        @param base_url - base URL path for accessing flexibee
+        """
+        req_filter_str = ''
+        if self.req_filter is not None:
+            req_filter_str = '/(%s)' % self.req_filter
+        url = "%s/%s%s.json" % (base_url, self.__class__.url, req_filter_str)
+        return url
+
 
 
 class RateRequest(WinstromRequest):
@@ -40,6 +165,7 @@ class RateRequest(WinstromRequest):
 	@param rates - a list of exchange rates
 	"""
 	self.rates = rates
+        super(self.__class__, self).__init__()
 
 
     def append(self, rate):
