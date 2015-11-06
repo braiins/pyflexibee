@@ -225,6 +225,23 @@ class BankRequest(WinstromRequest):
 	return self._to_json()
 
 
+class PaymentOrderRequest(WinstromRequest):
+    """
+    Represents the payment order request.
+    """
+    url = "prikaz-k-uhrade"
+
+    def __init__(self, req_filter=None):
+	"""
+	@param transactions - a list of transactions
+	"""
+        super(self.__class__, self).__init__(req_filter)
+
+
+    def __str__(self):
+	return self._to_json()
+
+
 
 class DynamicObject(object):
     """
