@@ -162,12 +162,12 @@ class RateRequest(WinstromRequest):
     """
     url = "kurz"
 
-    def __init__(self, rates=[]):
+    def __init__(self, req_filter=None, rates=[]):
 	"""
 	@param rates - a list of exchange rates
 	"""
 	self.rates = rates
-        super(self.__class__, self).__init__()
+        super(self.__class__, self).__init__(req_filter)
 
 
     def append(self, rate):
