@@ -95,7 +95,9 @@ class WinstromRequest(object):
         for obj_attrs in response_payload[self.__class__.url]:
             # filter only requested attributes
             set(obj_attrs.keys()) - set(attributes)
-
+            # This removes all items from obj_attrs if 'attributes' is
+            # non-empty, otherwise it retains the all object
+            # attributes
             map(filter_attributes, set(obj_attrs.keys()) - set(attributes))
             obj_list.append(cls(**obj_attrs))
 
