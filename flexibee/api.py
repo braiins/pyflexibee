@@ -131,7 +131,7 @@ class WinstromRequest(object):
         thrown
         """
         response_json = json.loads(response.content)
-        print response_json
+
         response_top_level = response_json[self.__class__.json_id]
         if response_top_level.has_key('success') and \
                 response_top_level['success'].lower() == 'false':
