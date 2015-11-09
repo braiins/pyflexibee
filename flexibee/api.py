@@ -219,3 +219,11 @@ class PaymentOrderRequest(WinstromRequest):
     Represents the payment order request.
     """
     url = "prikaz-k-uhrade"
+
+
+
+class ReceivedInvoiceRequest(WinstromRequest):
+    """
+    Represents the received invoice request.
+    """
+    url = "faktura-prijata"
