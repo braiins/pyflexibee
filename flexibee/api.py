@@ -42,17 +42,17 @@ class WinstromRequest(object):
         self.req_objects = []
 
     def _to_json(self):
-	"""
+        """
         Helper method that converts the request into JSON
 
-	@return json formatted request
-	"""
-	init_payload = {"@version":"1.0" }
-	init_payload.update(self._get_dict_repr())
-	json_dict = { self.__class__.json_id:
+        @return json formatted request
+        """
+        init_payload = {"@version":"1.0" }
+        init_payload.update(self._get_dict_repr())
+        json_dict = { self.__class__.json_id:
                           init_payload
-		     }
-	return json.dumps(json_dict)
+                     }
+        return json.dumps(json_dict)
 
 
     def _get_dict_repr(self):
@@ -63,7 +63,7 @@ class WinstromRequest(object):
         """
         dict_list = [ obj.get_dict_repr() for obj in self.req_objects ]
 
-	return {self.url: dict_list}
+        return {self.url: dict_list}
 
 
     def append(self, obj):
@@ -75,8 +75,8 @@ class WinstromRequest(object):
 
 
     def get(self, base_url, user, passwd, params={}):
-	"""
-	Sends the GET request to flexibee.
+        """
+        Sends the GET request to flexibee.
 
         @param base_url - base URL path for accessing flexibee
         @param user - username for authentication
@@ -84,17 +84,17 @@ class WinstromRequest(object):
         @param params - optional query parameters
         @param attributes - optional list of attributes to be fetched
         @return JSON response
-	"""
-	response = requests.get(self._build_url(base_url), params=params,
-				auth=(user, passwd), verify=False)
-	return response
+        """
+        response = requests.get(self._build_url(base_url), params=params,
+                                auth=(user, passwd), verify=False)
+        return response
 
 
-    def get_and_build_objects(self, cls, base_url, user, passwd, params={}, 
+    def get_and_build_objects(self, cls, base_url, user, passwd, params={},
                               attributes=[]):
-	"""
-	Sends the GET request to flexibee and builds requested objects
-	from the response.
+        """
+        Sends the GET request to flexibee and builds requested objects
+        from the response.
 
         @param base_url - base URL path for accessing flexibee
         @param cls - class of the object that will be build from the
@@ -106,7 +106,7 @@ class WinstromRequest(object):
         fetched. When empty, the object will be build from default
         attributes
         @return a list of objects of a specified class
-	"""
+        """
         # by default no attributes of the object will be filtered
         # (assume attributes array is empty)
         real_params = {}
@@ -123,7 +123,7 @@ class WinstromRequest(object):
 
         real_params.update(params)
         # fetch the objects
-	response = self.get(base_url, user, passwd, real_params)
+        response = self.get(base_url, user, passwd, real_params)
         response_payload = self._parse_response(response)
         obj_list = []
         # Iterate through all returned JSON objects and build the
@@ -143,19 +143,19 @@ class WinstromRequest(object):
 
 
     def put(self, base_url, user, passwd, params={}):
-	"""
-	Sends the PUT request to flexibee. The request
-	is represented in JSON.
+        """
+        Sends the PUT request to flexibee. The request
+        is represented in JSON.
         @param base_url - see put()
         @param user - see put()
         @param password - see put()
         @param params - see put()
         @return JSON response
-	"""
-	response = requests.put(self._build_url(base_url), params=params,
-				data=self._to_json(),
-				auth=(user, passwd), verify=False)
-	return response
+        """
+        response = requests.put(self._build_url(base_url), params=params,
+                                data=self._to_json(),
+                                auth=(user, passwd), verify=False)
+        return response
 
 
     def _parse_response(self, response):
@@ -194,7 +194,7 @@ class WinstromRequest(object):
 
 
     def __str__(self):
-	return self._to_json()
+        return self._to_json()
 
 
 
