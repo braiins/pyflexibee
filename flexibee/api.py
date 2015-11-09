@@ -39,21 +39,39 @@ class WinstromRequest(object):
 
     def __init__(self, req_filter=None):
         self.req_filter = req_filter
+        self.req_objects = []
 
-
-    def _to_json(self, payload):
+    def _to_json(self):
 	"""
         Helper method that converts the request into JSON
 
-	@param payload_dict - dictionary with the request payload
 	@return json formatted request
 	"""
 	init_payload = {"@version":"1.0" }
-	init_payload.update(payload)
+	init_payload.update(self._get_dict_repr())
 	json_dict = { self.__class__.json_id:
                           init_payload
 		     }
 	return json.dumps(json_dict)
+
+
+    def _get_dict_repr(self):
+        """
+        Dictionary representation of the request is a list of
+        dictionary representation of all objects that the request
+        consists of
+        """
+        dict_list = [ obj.get_dict_repr() for obj in self.req_objects ]
+
+	return {self.url: dict_list}
+
+
+    def append(self, obj):
+        """
+        Appends a object to the request
+        @param obj - object to be appended
+        """
+        self.req_objects.append(obj)
 
 
     def get(self, base_url, user, passwd, params={}):
@@ -175,40 +193,16 @@ class WinstromRequest(object):
         return url
 
 
+    def __str__(self):
+	return self._to_json()
+
+
 
 class RateRequest(WinstromRequest):
     """
     Represents the exchange rate request
     """
     url = "kurz"
-
-    def __init__(self, req_filter=None, rates=[]):
-	"""
-	@param rates - a list of exchange rates
-	"""
-	self.rates = rates
-        super(self.__class__, self).__init__(req_filter)
-
-
-    def append(self, rate):
-	"""
-	Appends a new rate to the list of exchange rates
-	@param rate - exchange rate to be appended
-	"""
-	self.rates.append(rate)
-
-
-    def _to_json(self):
-	"""
-	Converts the request to json
-	"""
-	rates_list = [ r.__dict__ for r in self.rates ]
-
-	return super(self.__class__, self)._to_json({"kurz" : rates_list})
-
-
-    def __str__(self):
-	return self._to_json()
 
 
 
@@ -218,33 +212,6 @@ class BankRequest(WinstromRequest):
     """
     url = "banka"
 
-    def __init__(self, req_filter=None, transactions=[]):
-	"""
-	@param transactions - a list of transactions
-	"""
-	self.transactions = transactions
-        super(self.__class__, self).__init__(req_filter)
-
-
-    def append(self, transaction):
-	"""
-	Appends a new transaction to the list of transactions
-	@param transactions - exchange rate to be appended
-	"""
-	self.transactions.append(transaction)
-
-
-    def _to_json(self):
-	"""
-	Converts the request to json
-	"""
-	transactions_list = [ t.__dict__ for t in self.transactions ]
-
-	return super(self.__class__, self)._to_json({self.__class__.url : transactions_list})
-
-
-    def __str__(self):
-	return self._to_json()
 
 
 class PaymentOrderRequest(WinstromRequest):
@@ -252,46 +219,3 @@ class PaymentOrderRequest(WinstromRequest):
     Represents the payment order request.
     """
     url = "prikaz-k-uhrade"
-
-    def __init__(self, req_filter=None):
-	"""
-	@param transactions - a list of transactions
-	"""
-        super(self.__class__, self).__init__(req_filter)
-
-
-    def __str__(self):
-	return self._to_json()
-
-
-
-class DynamicObject(object):
-    """
-    Simple dynamic object so that we can decode JSON based on
-    required subset of object attributes.
-    """
-    def __init__(self, **kwargs):
-        for key, value in kwargs.iteritems():
-            setattr(self, key, value)
-
-
-
-class ExchangeRate(object):
-    """
-    Exchange rate object as required by the flexibee API
-    """
-    def __init__(self, valid_from, rate, currency='code:UBTC', amount=1000000):
-	self.mena = currency
-	self.nbStred = rate
-	self.platiOdData = valid_from
-	self.kurzMnozstvi = amount
-
-
-
-class BankTransaction(DynamicObject):
-    """
-    Bank transaction object is fully dynamic as varying parts of
-    transactions are needed for automated processing.
-    """
-    def __init__(self, **kwargs):
-        super(self.__class__, self).__init__(**kwargs)
