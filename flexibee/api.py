@@ -21,6 +21,15 @@
 import json
 import requests
 
+# Workaround to prevent the 'SSLError: [SSL: SSL_NEGATIVE_LENGTH] dh
+# key too small (_ssl.c:590)' error disables some ciphers
+requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += 'HIGH:!DH:!aNULL'
+try:
+    requests.packages.urllib3.contrib.pyopenssl.DEFAULT_SSL_CIPHER_LIST += 'HIGH:!DH:!aNULL'
+except AttributeError:
+    # no pyopenssl support used / needed / available
+    pass
+
 
 class Error(Exception):
 
