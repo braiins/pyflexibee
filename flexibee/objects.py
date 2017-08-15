@@ -38,8 +38,7 @@ class DynamicObject(object):
 
 
     def __str__(self):
-        return json.dumps(self.get_dict_repr())
-
+        return json.dumps(self.get_dict_repr(), sort_keys=True, indent=4)
 
 
 class DynamicObjectWithJSONId(DynamicObject):
