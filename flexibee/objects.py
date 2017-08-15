@@ -18,6 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from decimal import Decimal
+import json
 
 class DynamicObject(object):
     """
