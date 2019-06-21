@@ -164,7 +164,7 @@ class WinstromRequest(object):
         response = requests.put(self._build_url(base_url), params=params,
                                 data=self._to_json(),
                                 auth=(user, passwd), verify=False)
-        return response
+        return self._parse_response(response)
 
 
     def _parse_response(self, response):
